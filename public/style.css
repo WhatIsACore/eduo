@@ -8,6 +8,35 @@ body{
         -ms-user-select: none; /* Internet Explorer/Edge */
             user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome and Opera */
+  overflow: hidden;
+}
+
+#menu{
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  text-align: center;
+}
+#menu-logo{
+  width: 200px;
+  margin-top: 140px;
+}
+#menu-logo-text{
+  margin-top: 10px;
+  margin-left: 0.5em;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 30px;
+  letter-spacing: 0.5em;
+  margin-bottom: 100px;
+}
+#menu #play{
+  font-family: 'Barlow', sans-serif;
+  font-size: 22px;
+  color: #000;
+  cursor: pointer;
+}
+#menu #play:hover{
+  color: #0d9249;
 }
 
 #hud-wrapper{
@@ -54,7 +83,7 @@ body{
   font-size: 16px;
   margin: 40px;
   color: #000;
-  opacity: 0.4;
+  opacity: 0.3;
 }
 
 #whiteboard{

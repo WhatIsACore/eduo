@@ -105,14 +105,17 @@ document.addEventListener("keydown", function(e){
 
   // handle keycodes
   switch(true){
-    case (e.keyCode == 17 && client.curPath == null):
+    case (e.keyCode == 17 && client.curPath == null): // CTRL
       startPath();
       break;
     case (e.keyCode >= 48 && e.keyCode <= 90 && client.curText == null && document.activeElement != submitField):
-      createText(e.keyCode);
+      createText(e.keyCode); // typing
       break;
-    case (e.keyCode == 13 && client.curText != null):
+    case (e.keyCode == 13 && client.curText != null): // enter key
       endPath();
+      break;
+    case (e.keyCode == 27): // ESC
+      window.location.href = "/";
       break;
   }
 }, false);

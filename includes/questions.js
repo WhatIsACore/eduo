@@ -18,5 +18,10 @@ module.exports.math = [
     text: 'Jason had $140 in his wallet. He spent 25% of his money at the bookstore. He then spent 20% of the remainder at Pizza Palace. How much money does Jason have left?',
     answer: 84,
     duration: 30
+  },
+  {
+    text: 'What is 6^2 + 5^2 + 4^2 + ... 1^2 ?',
+    answer: 91,
+    duration: 30
   }
 ]
