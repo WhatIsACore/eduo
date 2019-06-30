@@ -40,11 +40,11 @@ Room.prototype.connectClient = function(socket){
 
   // whiteboard events
   socket.on('pathStart', function(id, x, y){
-    socket.to('/' + this.id).emit('pathStart', id, x, y, socket.user.id);
+    this.io.emit('pathStart', id, x, y, socket.user.id);
     this.objects.push(new Path(id, x, y, socket.user.id));
   }.bind(this));
   socket.on('pathAddNode', function(id, x, y){
-    socket.to('/' + this.id).emit('pathAddNode', id, x, y);
+    this.io.emit('pathAddNode', id, x, y);
     for(var i in this.objects){ // augment an existing node
       if(this.objects[i].id == id){
         this.objects[i].nodes.push({x: x, y: y});
@@ -53,7 +53,7 @@ Room.prototype.connectClient = function(socket){
     }
   }.bind(this));
   socket.on('pathDelete', function(id){
-    socket.to('/' + this.id).emit('pathDelete', id);
+    this.io.emit('pathDelete', id);
     for(var i in this.objects){
       if(this.objects[i].id == id){
         this.objects[i] = null;
