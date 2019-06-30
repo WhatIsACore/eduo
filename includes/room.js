@@ -71,15 +71,26 @@ Room.prototype.connectClient = function(socket){
     }
   }.bind(this));
 
-  socket.on('pathDelete', function(id){
-    this.io.emit('pathDelete', id);
-    for(var i in this.objects){
+  socket.on('textCreate', function(id, x, y, value){
+    for(var i in this.users) // emit excluding sender
+      if(this.users[i] != socket.user)
+        this.users[i].socket.emit('textCreate', id, x, y, value, socket.user.id);
+
+    this.objects.push(new Text(id, x, y, value,socket.user.id));
+  }.bind(this));
+
+  socket.on('textUpdate', function(id, value){
+    for(var i in this.users) // emit excluding sender
+      if(this.users[i] != socket.user)
+        this.users[i].socket.emit('textUpdate', id, value);
+
+    for(var i in this.objects){ // modify a value
       if(this.objects[i].id == id){
-        this.objects[i] = null;
+        this.objects[i].value = value;
         break;
       }
     }
-  }.bind(this));
+  }.bind(this))
 
   socket.on('mouseMove', function(x, y){
     for(var i in this.users) // emit excluding sender
@@ -155,5 +166,14 @@ var Path = function(id, x, y, owner){
     x: x,
     y: y
   }];
+  this.owner = owner;
+}
+
+var Text = function(id, x, y, value, owner){
+  this.type = 'text';
+  this.id = id;
+  this.x = x;
+  this.y = y;
+  this.value = value;
   this.owner = owner;
 }

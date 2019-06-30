@@ -26,6 +26,7 @@ var client = {
   mouseY: 0,
   xOffset: canvas.width / 2,
   curPath: null,
+  curText: null,
   selfCursor: $("#cursor-green"),
   buddyCursor: $("#cursor-orange"),
   lastMouseUpdate: 0,
@@ -78,6 +79,7 @@ function drawObjects(){
     if(o == null) continue;
 
     ctx.strokeStyle = o.owner == client.id ? color.self : color.buddy;
+    ctx.fillStyle = ctx.strokeStyle;
     switch(o.type){
       case 'path':
         ctx.beginPath();
@@ -87,7 +89,11 @@ function drawObjects(){
         ctx.stroke();
         ctx.closePath();
         break;
-      default:
+      case 'text':
+        if(client.curText == o) break;
+        ctx.font = '22px Barlow';
+        ctx.fillText(o.value, o.x + client.xOffset, o.y);
+        break;
     }
   }
 }
@@ -98,10 +104,15 @@ document.addEventListener("keydown", function(e){
     e.preventDefault();
 
   // handle keycodes
-  switch(e.keyCode){
-    case 17:
-      if(client.curPath == null)
-        startPath();
+  switch(true){
+    case (e.keyCode == 17 && client.curPath == null):
+      startPath();
+      break;
+    case (e.keyCode >= 48 && e.keyCode <= 90 && client.curText == null && document.activeElement != submitField):
+      createText(e.keyCode);
+      break;
+    case (e.keyCode == 13 && client.curText != null):
+      endPath();
       break;
   }
 }, false);
@@ -109,6 +120,10 @@ document.addEventListener("keydown", function(e){
 document.addEventListener("keyup", function(e){
   if(e.keyCode == 17) endPath();
 }, false);
+
+document.addEventListener("click", function(){
+  if(client.curText != null) closeText();
+});
 
 var submitField = $('#submit-input');
 submitField.addEventListener("input", updateAnswer);
@@ -120,6 +135,9 @@ function updateAnswer(){
   $('#submit-progress').innerHTML = client.submitProgress;
   submitBtn.className = submitField.value.length > 0 ? "" : "disabled";
 }
+submitField.addEventListener('keydown', function(){
+  submitBtn.click();
+});
 
 var submitBtn = $('#submit-btn');
 submitBtn.addEventListener("click", function(){
@@ -151,6 +169,7 @@ socket.on('update', function(id, objects){
 socket.on('clear', function(){
   boardObjects = [];
 });
+
 socket.on('pathStart', function(id, x, y, owner){
   boardObjects.push(new Path(id, x, y, owner));
 });
@@ -162,14 +181,18 @@ socket.on('pathAddNode', function(id, x, y, owner){
     }
   }
 });
-socket.on('pathDelete', function(id){
-  for(var i in boardObjects){
+socket.on('textCreate', function(id, x, y, value, owner){
+  boardObjects.push(new Text(id, x, y, value, owner));
+});
+socket.on('textUpdate', function(id, value){
+  for(var i in boardObjects){ // augment an existing node
     if(boardObjects[i].id == id){
-      boardObjects[i] = null;
+      boardObjects[i].value = value;
       break;
     }
   }
 });
+
 socket.on('mouseMove', function(x, y, owner){ // other cursor moved
   client.buddyCursor.style.marginLeft = (x - 5 + client.xOffset) + "px";
   client.buddyCursor.style.marginTop = (y - 50) + "px";
@@ -219,6 +242,15 @@ var Path = function(id, x, y, owner){
   }];
   this.owner = owner;
 }
+var Text = function(id, x, y, value, owner){
+  this.type = 'text';
+  this.id = id;
+  this.x = x;
+  this.y = y;
+  this.value = value;
+  this.owner = owner;
+}
+
 
 // inputs
 function startPath(){
@@ -230,3 +262,29 @@ function startPath(){
 function endPath(){
   client.curPath = null;
 }
+
+// we use a input field to handle text creation
+var typebox = $('#typebox');
+function createText(key){
+  var t = new Text(Date.now(), client.mouseX - 5, client.mouseY + 20, String.fromCharCode(key), client.id);
+  boardObjects.push(t);
+  client.curText = t;
+  socket.emit('textCreate', t.id, t.x, t.y);
+  typebox.style.marginLeft = t.x + client.xOffset + "px";
+  typebox.style.marginTop = (t.y - 22) + "px";
+  typebox.className = "active";
+  typebox.focus();
+}
+function closeText(){
+  client.curText = null;
+  typebox.className = "";
+  typebox.value = "";
+  $("#blur").focus();
+}
+typebox.addEventListener('keydown', function(e){
+  if(e.keyCode == 13) closeText();
+});
+typebox.addEventListener('input', function(){
+  client.curText.value = typebox.value;
+  socket.emit('textUpdate', client.curText.id, typebox.value);
+});
