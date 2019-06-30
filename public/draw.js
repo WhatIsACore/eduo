@@ -51,6 +51,7 @@ function drawCursor(){
 }
 
 function drawObjects(){
+  ctx.lineWidth = 3;
   for(var i = 0; i < boardObjects.length; i++){
     var o = boardObjects[i];
     if(o == null) continue;
@@ -105,9 +106,11 @@ socket.on('update', function(id, objects){
   boardObjects = objects;
 });
 socket.on('pathStart', function(id, x, y, owner){
+  if(owner == client.id) return;
   boardObjects.push(new Path(id, x, y, owner));
 });
-socket.on('pathAddNode', function(id, x, y){
+socket.on('pathAddNode', function(id, x, y, owner){
+  if(owner == client.id) return;
   for(var i in boardObjects){ // augment an existing node
     if(boardObjects[i].id == id){
       boardObjects[i].nodes.push({x: x, y: y});

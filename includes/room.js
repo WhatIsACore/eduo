@@ -10,13 +10,14 @@ var Room = function(id, io){
   this.size = 0;
   this.maxSize = 2;
   this.objects = [];
+  this.defunct = false;
   logger.info('created Room id=' + id);
 }
 module.exports.Room = Room;
 
 Room.prototype.connectClient = function(socket){
 
-  if(this.size >= this.maxSize){
+  if(this.size >= this.maxSize || this.defunct){
     socket.disconnect();
     return;
   }
@@ -36,6 +37,7 @@ Room.prototype.connectClient = function(socket){
     delete this.users[socket.user.id];
     socket.disconnect();
     this.size--;
+    this.defunct = true; // flag for deletion
   }).bind(this));
 
   // whiteboard events
@@ -44,7 +46,7 @@ Room.prototype.connectClient = function(socket){
     this.objects.push(new Path(id, x, y, socket.user.id));
   }.bind(this));
   socket.on('pathAddNode', function(id, x, y){
-    this.io.emit('pathAddNode', id, x, y);
+    this.io.emit('pathAddNode', id, x, y, socket.user.id);
     for(var i in this.objects){ // augment an existing node
       if(this.objects[i].id == id){
         this.objects[i].nodes.push({x: x, y: y});

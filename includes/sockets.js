@@ -17,10 +17,15 @@ function init(server){
 
     // find an open room
     var found = false;
-    for(var r in rooms){
-      if(rooms[r].size < rooms[r].maxSize){
+    for(var i in rooms){
+      var r = rooms[i];
+      if(r.defunct && r.size == 0){ // clear empty defunct rooms
+        delete rooms[i];
+        continue;
+      }
+      if(r.size < r.maxSize && !r.defunct){
         found = true;
-        socket.emit('room-id', rooms[r].id);
+        socket.emit('room-id', r.id);
         break;
       }
     }
