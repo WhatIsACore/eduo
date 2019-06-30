@@ -19,7 +19,10 @@ if(!config.debug) routes.use(minify());
 routes.get('/', function(req, res, next){
         res.sendFile(__dirname + '/public/index.html');
       })
-      .use('/', express.static(__dirname + '/public'));
+      .get('/:id', function(req, res, next){
+        res.sendFile(__dirname + '/public/draw.html');
+      })
+      .use('/public', express.static(__dirname + '/public'));
 
 server.listen(config.port, function(){
   logger.info('starting server on port ' + config.port);

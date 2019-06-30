@@ -1,5 +1,7 @@
 "use strict";
 
+var socket = io(window.location.pathname);
+
 var canvas = document.getElementById("whiteboard");
 var ctx = canvas.getContext("2d");
 
