@@ -44,6 +44,8 @@ Room.prototype.connectClient = function(socket){
     delete this.users[socket.user.id];
     socket.disconnect();
     this.size--;
+    this.io.emit('buddyLeft');
+    this.phase = 0;
     this.defunct = true; // flag for deletion
   }).bind(this));
 

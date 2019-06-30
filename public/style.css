@@ -63,7 +63,7 @@ body{
 }
 #hud #timer{
   margin-top: 10px;
-  font-family: 'Barlow', sans-serif;
+  font-family: 'Roboto Mono', sans-serif;
   font-size: 60px;
   letter-spacing: 0.05em;
 }
@@ -73,6 +73,12 @@ body{
   font-family: 'Barlow', sans-serif;
   font-size: 22px;
   text-align: center;
+}
+#hud #info .correct{
+  color: #008800;
+}
+#hud #info .incorrect{
+  color: #888800;
 }
 
 #controls{

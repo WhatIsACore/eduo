@@ -232,7 +232,14 @@ socket.on('questionResult', function(time, result){
   client.timerTarget = time;
   $("#submit-box").className = "disabled";
   $("#blur").focus();
-  infoText.innerHTML = result ? "Great job! Get ready for the next one!" : "Too bad, let's try again!";
+  infoText.innerHTML = result ? "<span class='correct'>Great job! Get ready for the next one!</span>" : "<span class='incorrect'>Too bad, let's try again!</span>";
+});
+socket.on('buddyLeft', function(){
+  client.timerTarget = null;
+  timer.innerHTML = '00:00';
+  infoText.innerHTML = "your buddy left :(";
+  $("#submit-box").className = "disabled";
+  $("#blur").focus();
 });
 
 // whiteboard objects
