@@ -1,8 +1,14 @@
 "use strict";
 
+// pretend we have jquery
+function $(query){
+  var q = document.querySelectorAll(query);
+  return q.length > 1 ? q : q[0];
+}
+
 var socket = io(window.location.pathname);
 
-var canvas = document.getElementById("whiteboard");
+var canvas = $("#whiteboard");
 var ctx = canvas.getContext("2d");
 
 function init(){
@@ -20,9 +26,11 @@ var client = {
   mouseY: 0,
   xOffset: canvas.width / 2,
   curPath: null,
-  selfCursor: document.getElementById("cursor-green"),
-  buddyCursor: document.getElementById("cursor-orange"),
-  lastMouseUpdate: 0
+  selfCursor: $("#cursor-green"),
+  buddyCursor: $("#cursor-orange"),
+  lastMouseUpdate: 0,
+  timerTarget: null,
+  question: null
 };
 
 function resizeCanvas(){
@@ -46,10 +54,19 @@ function updateMousePos(e){
 }
 document.addEventListener("mousemove", updateMousePos);
 
+var timer = $('#timer');
 function refreshBoard(){
   ctx.clearRect(0, 0, canvas.width, canvas.height); // clears canvas
   drawObjects();
   handleInputs();
+
+  // handle timer
+  if(client.timerTarget != null){
+    var millisRemaining = client.timerTarget - Date.now();
+    var minutes = Math.floor(millisRemaining / (1000 * 60)).toString().padStart(2, '0');
+    var seconds = Math.max(Math.floor(millisRemaining % (1000 * 60) / 1000), 0).toString().padStart(2, '0');
+    timer.innerHTML = minutes + ':' + seconds;
+  }
 }
 
 function drawObjects(){
@@ -91,6 +108,13 @@ document.addEventListener("keyup", function(e){
   if(e.keyCode == 17) endPath();
 }, false);
 
+var submit = $('#submit-input');
+submit.addEventListener("input", updateAnswer);
+submit.addEventListener("propertychange", updateAnswer);
+function updateAnswer(){
+  socket.emit('updateAnswer', submit.value);
+}
+
 function handleInputs(){
   // continue path currently being drawn
   if(client.curPath != null){
@@ -107,6 +131,9 @@ socket.on('update', function(id, objects){
   client.id = id;
   boardObjects = objects;
   init();
+});
+socket.on('clear', function(){
+  boardObjects = [];
 });
 socket.on('pathStart', function(id, x, y, owner){
   boardObjects.push(new Path(id, x, y, owner));
@@ -130,6 +157,29 @@ socket.on('pathDelete', function(id){
 socket.on('mouseMove', function(x, y, owner){ // other cursor moved
   client.buddyCursor.style.marginLeft = (x - 5 + client.xOffset) + "px";
   client.buddyCursor.style.marginTop = (y - 50) + "px";
+});
+socket.on('updateAnswer', function(value){
+  $('#submit-input').value = value;
+});
+
+// question controls
+var infoText = $('#info');
+socket.on('questionReady', function(time){
+  client.timerTarget = time;
+  $("#submit-box").className = "disabled";
+  infoText.innerHTML = "get ready...";
+});
+socket.on('questionUpdate', function(time, question){
+  client.timerTarget = time;
+  $("#submit-box").className = "";
+  submit.value = "";
+  infoText.innerHTML = question.text;
+});
+socket.on('questionResult', function(time, result){
+  client.timerTarget = time;
+  $("#submit-box").className = "disabled";
+  $("#blur").focus();
+  infoText.innerHTML = result ? "Great job! Get ready for the next one!" : "Too bad, let's try again!";
 });
 
 // whiteboard objects

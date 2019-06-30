@@ -1,6 +1,7 @@
 'use strict';
 
 var logger = require('./logger');
+var questions = require('./questions');
 
 var Room = function(id, io){
   this.id = id;
@@ -11,6 +12,8 @@ var Room = function(id, io){
   this.maxSize = 2;
   this.objects = [];
   this.defunct = false;
+  this.phase = 0; // 0 = lobby, 1 = ready, 2 = question, 3 = result
+  this.answerInput = "";
   logger.info('created Room id=' + id);
 }
 module.exports.Room = Room;
@@ -32,6 +35,9 @@ Room.prototype.connectClient = function(socket){
   // emit current state
   socket.emit('update', id, this.objects);
 
+  // begin game
+  if(this.size == this.maxSize && this.question == null) this.startGame();
+
   socket.on('disconnect', (function(){
     this.info('disconnected User id=' + socket.user.id);
     delete this.users[socket.user.id];
@@ -39,6 +45,8 @@ Room.prototype.connectClient = function(socket){
     this.size--;
     this.defunct = true; // flag for deletion
   }).bind(this));
+
+  socket.on('clear', this.clear.bind(this));
 
   // whiteboard events
   socket.on('pathStart', function(id, x, y){
@@ -74,11 +82,46 @@ Room.prototype.connectClient = function(socket){
 
   socket.on('mouseMove', function(x, y){
     for(var i in this.users) // emit excluding sender
-      if(this.users[i] != socket.user){
+      if(this.users[i] != socket.user)
         this.users[i].socket.emit('mouseMove', x, y, socket.user.id);
-      }
   }.bind(this));
 
+  socket.on('updateAnswer', function(value){
+    this.answerInput = value;
+    for(var i in this.users) // emit excluding sender
+      if(this.users[i] != socket.user)
+        this.users[i].socket.emit('updateAnswer', value);
+  }.bind(this));
+
+}
+
+Room.prototype.clear = function(){
+  this.objects = [];
+  this.io.emit('clear');
+}
+
+Room.prototype.startGame = function(){
+  this.phase = 1;
+  this.startTime = Date.now();
+  this.io.emit('questionReady', this.startTime + 5000);
+  setTimeout(this.serveQuestion.bind(this), 5000);
+}
+
+Room.prototype.serveQuestion = function(){
+  this.phase = 2;
+  this.answerInput = "";
+  this.question = questions.math[Math.floor(Math.random(questions.math.length))];
+  this.startTime = Date.now();
+  this.clear();
+  this.io.emit('questionUpdate', this.startTime + this.question.duration * 1000, this.question);
+  this.timeout = setTimeout(this.getResult.bind(this), this.question.duration * 1000);
+}
+
+Room.prototype.getResult = function(){
+  this.phase = 3;
+  this.startTime = Date.now();
+  this.io.emit('questionResult', this.startTime + 5000, true); // TODO: check if question was answered correctly
+  this.timeout = setTimeout(this.serveQuestion.bind(this), 5000);
 }
 
 // easy debugging

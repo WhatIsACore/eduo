@@ -32,23 +32,61 @@ body{
   letter-spacing: 0.05em;
 }
 #hud #info{
-  margin-top: 20px;
+  width: 500px;
+  margin: 20px auto;
   font-family: 'Barlow', sans-serif;
   font-size: 22px;
+  text-align: center;
 }
 
 #whiteboard{
   position: fixed;
   cursor: none;
-  z-index: 10;
+  z-index: 3;
+}
+
+#submit-box{
+  position: fixed;
+  width: 300px;
+  margin: 0 calc(50% - 170px);
+  padding: 20px;
+  bottom: 60px;
+  text-align: center;
+  background-color: #fff86c;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 22px;
+  z-index: 4;
+  cursor: none;
+}
+#submit-box.disabled{
+  pointer-events: none;
+  opacity: 0.5;
+}
+#submit-box #submit-input{
+  width: 220px;
+  height: 28px;
+  padding: 10px;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  font-family: 'Barlow', sans-serif;
+  font-size: 28px;
+  line-height: 28px;
+  text-align: center;
+  border-bottom: 3px solid rgba(0, 0, 0, 0.2);
+  cursor: none;
+}
+#submit-box #submit-input:hover, #submit-box #submit-input:focus{
+  border-bottom: 3px solid rgba(0, 0, 0, 0.5);
 }
 
 #cursor-wrapper{
   position: fixed;
   width: 100%;
   height: 100vh;
-  z-index: 20;
+  z-index: 5;
   cursor: none;
+  pointer-events: none;
 }
 #cursor-wrapper #cursor-green, #cursor-wrapper #cursor-orange{
   position: fixed;
