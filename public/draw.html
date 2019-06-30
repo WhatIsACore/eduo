@@ -4,10 +4,29 @@
     <title>
       eduo
     </title>
+    <link href="https://fonts.googleapis.com/css?family=Barlow|Josefin+Sans&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="/public/style.css">
   </head>
   <body>
+    <div id="hud-wrapper">
+      <div id="hud">
+        <img id="logo" src="/public/media/logo.svg">
+        <div id="logo-text">eduo</div>
+        <div id="timer">00:00</div>
+        <div id="info">waiting for a buddy...</div>
+      </div>
+    </div>
+
     <canvas id="whiteboard"></canvas>
+
+    <div id="cursor-wrapper">
+      <div id="cursor-green">
+        <img class="cursor" src="/public/media/green.svg">
+      </div>
+      <div id="cursor-orange">
+        <img class="cursor" src="/public/media/orange.svg">
+      </div>
+    </div>
 
     <script src="https://cdn.agora.io/sdk/web/AgoraRTCSDK-2.7.0.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>

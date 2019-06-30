@@ -5,17 +5,9 @@ var socket = io(window.location.pathname);
 var canvas = document.getElementById("whiteboard");
 var ctx = canvas.getContext("2d");
 
-function resizeCanvas(){
-  canvas.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-  canvas.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-}
-document.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
 function init(){
   setInterval(refreshBoard, 1000 / 60);
 }
-init();
 
 // colors
 var color = {
@@ -26,28 +18,38 @@ var client = {
   id: 0,
   mouseX: 0,
   mouseY: 0,
-  curPath: null
+  xOffset: canvas.width / 2,
+  curPath: null,
+  selfCursor: document.getElementById("cursor-green"),
+  buddyCursor: document.getElementById("cursor-orange"),
+  lastMouseUpdate: 0
 };
+
+function resizeCanvas(){
+  canvas.width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  canvas.height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  client.xOffset = canvas.width / 2;
+}
+document.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
 function updateMousePos(e){
   var rect = canvas.getBoundingClientRect();
-  client.mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  client.mouseX = (e.clientX - rect.left) * (canvas.width / rect.width) - client.xOffset;
   client.mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+  client.selfCursor.style.marginLeft = (client.mouseX - 5 + client.xOffset) + "px";
+  client.selfCursor.style.marginTop = (client.mouseY - 50) + "px";
+  if(Date.now() - client.lastMouseUpdate > 1000/30){
+    socket.emit('mouseMove', client.mouseX, client.mouseY);
+    client.lastMouseUpdate = Date.now();
+  }
 }
 document.addEventListener("mousemove", updateMousePos);
 
 function refreshBoard(){
   ctx.clearRect(0, 0, canvas.width, canvas.height); // clears canvas
   drawObjects();
-  drawCursor();
   handleInputs();
-}
-
-function drawCursor(){
-  ctx.fillStyle = "#00f";
-  for(var i = -2; i < 3; i++){
-    ctx.fillRect(client.mouseX-1 + i * 4, client.mouseY-1, 2, 2);
-    ctx.fillRect(client.mouseX-1, client.mouseY-1 + i * 4, 2, 2);
-  }
 }
 
 function drawObjects(){
@@ -60,9 +62,9 @@ function drawObjects(){
     switch(o.type){
       case 'path':
         ctx.beginPath();
-        ctx.moveTo(o.nodes[0].x, o.nodes[0].y);
+        ctx.moveTo(o.nodes[0].x + client.xOffset, o.nodes[0].y);
         for(var j = 1; j < o.nodes.length; j++)
-          ctx.lineTo(o.nodes[j].x, o.nodes[j].y);
+          ctx.lineTo(o.nodes[j].x + client.xOffset, o.nodes[j].y);
         ctx.stroke();
         ctx.closePath();
         break;
@@ -104,13 +106,12 @@ var boardObjects = [];
 socket.on('update', function(id, objects){
   client.id = id;
   boardObjects = objects;
+  init();
 });
 socket.on('pathStart', function(id, x, y, owner){
-  if(owner == client.id) return;
   boardObjects.push(new Path(id, x, y, owner));
 });
 socket.on('pathAddNode', function(id, x, y, owner){
-  if(owner == client.id) return;
   for(var i in boardObjects){ // augment an existing node
     if(boardObjects[i].id == id){
       boardObjects[i].nodes.push({x: x, y: y});
@@ -125,6 +126,10 @@ socket.on('pathDelete', function(id){
       break;
     }
   }
+});
+socket.on('mouseMove', function(x, y, owner){ // other cursor moved
+  client.buddyCursor.style.marginLeft = (x - 5 + client.xOffset) + "px";
+  client.buddyCursor.style.marginTop = (y - 50) + "px";
 });
 
 // whiteboard objects

@@ -3,6 +3,56 @@ body{
   padding: 0;
 }
 
+#hud-wrapper{
+  position: fixed;
+  width: 100%;
+  z-index: -1;
+}
+#hud{
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  text-align: center;
+}
+#hud #logo{
+  margin: 20px auto 0;
+  width: 100px;
+}
+#hud #logo-text{
+  margin-top: 5px;
+  margin-left: 0.5em;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.5em;
+}
+#hud #timer{
+  margin-top: 10px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 60px;
+  letter-spacing: 0.05em;
+}
+#hud #info{
+  margin-top: 20px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 22px;
+}
+
 #whiteboard{
+  position: fixed;
   cursor: none;
+  z-index: 10;
+}
+
+#cursor-wrapper{
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  z-index: 20;
+  cursor: none;
+}
+#cursor-wrapper #cursor-green, #cursor-wrapper #cursor-orange{
+  position: fixed;
+}
+#cursor-wrapper .cursor{
+  width: 36px;
 }
