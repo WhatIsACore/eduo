@@ -14,6 +14,7 @@ var Room = function(id, io){
   this.defunct = false;
   this.phase = 0; // 0 = lobby, 1 = ready, 2 = question, 3 = result
   this.answerInput = "";
+  this.submitProgress = 0;
   logger.info('created Room id=' + id);
 }
 module.exports.Room = Room;
@@ -88,9 +89,21 @@ Room.prototype.connectClient = function(socket){
 
   socket.on('updateAnswer', function(value){
     this.answerInput = value;
+    this.submitProgress = 0;
     for(var i in this.users) // emit excluding sender
       if(this.users[i] != socket.user)
         this.users[i].socket.emit('updateAnswer', value);
+  }.bind(this));
+
+  socket.on('submitAnswer', function(){
+    this.submitProgress++;
+    for(var i in this.users) // emit excluding sender
+      if(this.users[i] != socket.user)
+        this.users[i].socket.emit('submitAnswer');
+    if(this.submitProgress == this.maxSize){
+      clearTimeout(this.timeout);
+      this.getResult();
+    }
   }.bind(this));
 
 }
@@ -110,7 +123,7 @@ Room.prototype.startGame = function(){
 Room.prototype.serveQuestion = function(){
   this.phase = 2;
   this.answerInput = "";
-  this.question = questions.math[Math.floor(Math.random(questions.math.length))];
+  this.question = questions.math[Math.floor(Math.random() * questions.math.length)];
   this.startTime = Date.now();
   this.clear();
   this.io.emit('questionUpdate', this.startTime + this.question.duration * 1000, this.question);
@@ -120,7 +133,7 @@ Room.prototype.serveQuestion = function(){
 Room.prototype.getResult = function(){
   this.phase = 3;
   this.startTime = Date.now();
-  this.io.emit('questionResult', this.startTime + 5000, true); // TODO: check if question was answered correctly
+  this.io.emit('questionResult', this.startTime + 5000, this.answerInput == this.question.answer); // TODO: check if question was answered correctly
   this.timeout = setTimeout(this.serveQuestion.bind(this), 5000);
 }
 

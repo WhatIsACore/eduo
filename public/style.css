@@ -1,6 +1,13 @@
 body{
   margin: 0;
   padding: 0;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
 }
 
 #hud-wrapper{
@@ -50,7 +57,7 @@ body{
   width: 300px;
   margin: 0 calc(50% - 170px);
   padding: 20px;
-  bottom: 60px;
+  bottom: 80px;
   text-align: center;
   background-color: #fff86c;
   font-family: 'Josefin Sans', sans-serif;
@@ -78,6 +85,28 @@ body{
 }
 #submit-box #submit-input:hover, #submit-box #submit-input:focus{
   border-bottom: 3px solid rgba(0, 0, 0, 0.5);
+}
+#submit-btn{
+  position: fixed;
+  width: 200px;
+  margin: 0 calc(50% - 100px);
+  text-align: center;
+  bottom: 40px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 22px;
+  opacity: 0.5;
+  z-index: 4;
+  cursor: pointer;
+}
+#submit-btn:hover{
+  opacity: 1;
+}
+#submit-btn.disabled{
+  pointer-events: none;
+  opacity: 0;
+}
+#submit-btn.submitted{
+  opacity: 1;
 }
 
 #cursor-wrapper{

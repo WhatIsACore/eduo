@@ -19,19 +19,22 @@
 
     <canvas id="whiteboard"></canvas>
 
-    <div id="submit-box">
+    <div id="submit-box" class="disabled">
       <div>
         Final Answer:
       </div>
-      <input id="submit-input" class="disabled" type="text">
+      <input id="submit-input" type="number">
       <input id="blur" type="text" style="position: absolute; opacity: 0;">
+    </div>
+    <div id="submit-btn" class="disabled">
+      submit (<span id="submit-progress">0</span>/2)
     </div>
 
     <div id="cursor-wrapper">
-      <div id="cursor-green">
+      <div id="cursor-green" style="margin-top: -100px">
         <img class="cursor" src="/public/media/green.svg">
       </div>
-      <div id="cursor-orange">
+      <div id="cursor-orange" style="margin-top: -100px">
         <img class="cursor" src="/public/media/orange.svg">
       </div>
     </div>

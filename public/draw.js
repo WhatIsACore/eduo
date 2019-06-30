@@ -30,7 +30,9 @@ var client = {
   buddyCursor: $("#cursor-orange"),
   lastMouseUpdate: 0,
   timerTarget: null,
-  question: null
+  question: null,
+  submitted: false,
+  submitProgress: 0
 };
 
 function resizeCanvas(){
@@ -64,7 +66,7 @@ function refreshBoard(){
   if(client.timerTarget != null){
     var millisRemaining = client.timerTarget - Date.now();
     var minutes = Math.floor(millisRemaining / (1000 * 60)).toString().padStart(2, '0');
-    var seconds = Math.max(Math.floor(millisRemaining % (1000 * 60) / 1000), 0).toString().padStart(2, '0');
+    var seconds = Math.max(Math.floor((millisRemaining - 200) % (1000 * 60) / 1000), 0).toString().padStart(2, '0');
     timer.innerHTML = minutes + ':' + seconds;
   }
 }
@@ -108,12 +110,26 @@ document.addEventListener("keyup", function(e){
   if(e.keyCode == 17) endPath();
 }, false);
 
-var submit = $('#submit-input');
-submit.addEventListener("input", updateAnswer);
-submit.addEventListener("propertychange", updateAnswer);
+var submitField = $('#submit-input');
+submitField.addEventListener("input", updateAnswer);
+submitField.addEventListener("propertychange", updateAnswer);
 function updateAnswer(){
-  socket.emit('updateAnswer', submit.value);
+  client.submitted = false;
+  client.submitProgress = 0;
+  socket.emit('updateAnswer', submitField.value);
+  $('#submit-progress').innerHTML = client.submitProgress;
+  submitBtn.className = submitField.value.length > 0 ? "" : "disabled";
 }
+
+var submitBtn = $('#submit-btn');
+submitBtn.addEventListener("click", function(){
+  if(client.submitted) return;
+  submitBtn.className = 'submitted';
+  client.submitted = true;
+  client.submitProgress++;
+  socket.emit('submitAnswer');
+  $('#submit-progress').innerHTML = client.submitProgress;
+})
 
 function handleInputs(){
   // continue path currently being drawn
@@ -159,8 +175,16 @@ socket.on('mouseMove', function(x, y, owner){ // other cursor moved
   client.buddyCursor.style.marginTop = (y - 50) + "px";
 });
 socket.on('updateAnswer', function(value){
-  $('#submit-input').value = value;
+  submitField.value = value;
+  client.submitted = false;
+  client.submitProgress = 0;
+  $('#submit-progress').innerHTML = client.submitProgress;
+  submitBtn.className = submitField.value.length > 0 ? "" : "disabled";
 });
+socket.on('submitAnswer', function(){
+  client.submitProgress++;
+  $('#submit-progress').innerHTML = client.submitProgress;
+})
 
 // question controls
 var infoText = $('#info');
@@ -172,8 +196,11 @@ socket.on('questionReady', function(time){
 socket.on('questionUpdate', function(time, question){
   client.timerTarget = time;
   $("#submit-box").className = "";
-  submit.value = "";
+  submitField.value = "";
   infoText.innerHTML = question.text;
+  client.submitProgress = 0;
+  $('#submit-progress').innerHTML = client.submitProgress;
+  $('#submit-btn').className = "disabled";
 });
 socket.on('questionResult', function(time, result){
   client.timerTarget = time;
