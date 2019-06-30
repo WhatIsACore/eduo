@@ -28,6 +28,9 @@ Room.prototype.connectClient = function(socket){
   socket.user = this.users[id];
   this.info('connected User id=' + id);
 
+  // emit current state
+  socket.emit('update', id, this.objects);
+
   socket.on('disconnect', (function(){
     this.info('disconnected User id=' + socket.user.id);
     delete this.users[socket.user.id];
@@ -37,9 +40,9 @@ Room.prototype.connectClient = function(socket){
 
   // whiteboard events
   socket.on('pathStart', function(id, x, y){
-    socket.to('/' + this.id).emit('pathStart', id, x, y);
-    this.objects.push(new Path(id, x, y));
-  });
+    socket.to('/' + this.id).emit('pathStart', id, x, y, socket.user.id);
+    this.objects.push(new Path(id, x, y, socket.user.id));
+  }.bind(this));
   socket.on('pathAddNode', function(id, x, y){
     socket.to('/' + this.id).emit('pathAddNode', id, x, y);
     for(var i in this.objects){ // augment an existing node
@@ -48,16 +51,16 @@ Room.prototype.connectClient = function(socket){
         break;
       }
     }
-  });
+  }.bind(this));
   socket.on('pathDelete', function(id){
-    socket.to('/' + this.id).emit('pathDelete', id, x, y);
+    socket.to('/' + this.id).emit('pathDelete', id);
     for(var i in this.objects){
       if(this.objects[i].id == id){
         this.objects[i] = null;
         break;
       }
     }
-  });
+  }.bind(this));
 
 }
 
@@ -73,6 +76,7 @@ var User = function(id, socket){
 
 // whiteboard objects
 var Path = function(id, x, y, owner){
+  this.type = 'path';
   this.id = id;
   this.nodes = [{
     x: x,
